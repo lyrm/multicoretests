@@ -225,10 +225,10 @@ struct
     let sut = Spec.init_sut () in
     let pref_obs = interp_sut_res sut seq_pref in
     let wait = Atomic.make true in
-    let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; interp_sut_res sut cmds1) in
-    let dom2 = Domain.spawn (fun () -> Atomic.set wait false; interp_sut_res sut cmds2) in
-    let obs1 = try Ok (Domain.join dom1) with exn -> Error exn in
-    let obs2 = try Ok (Domain.join dom2) with exn -> Error exn in
+    let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; try Ok (interp_sut_res sut cmds1) with exn -> Error exn) in
+    let dom2 = Domain.spawn (fun () -> Atomic.set wait false; try Ok (interp_sut_res sut cmds2) with exn -> Error exn) in
+    let obs1 = Domain.join dom1 in
+    let obs2 = Domain.join dom2 in
     let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
     let ()   = Spec.cleanup sut in
