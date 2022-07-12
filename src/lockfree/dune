@@ -14,6 +14,17 @@
  (libraries qcheck STM lockfree)
  (preprocess (pps ppx_deriving.show)))
 
+(alias
+ (name default)
+ (package multicoretests)
+ (deps spsc_queue_test.exe))
+
+(executable
+ (name spsc_queue_test)
+ (modules spsc_queue_test)
+ (libraries qcheck STM lockfree)
+ (preprocess (pps ppx_deriving.show)))
+
 (env
  (_
   (binaries
@@ -27,3 +38,12 @@
   (progn
    (bash "(./ws_deque_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee wsd-output.txt")
    (run %{bin:check_error_count} "lockfree/ws_deque_test" 1 wsd-output.txt))))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps spsc_queue_test.exe)
+ (action
+  (progn
+   (bash "(./spsc_queue_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee wsd-output.txt")
+   (run %{bin:check_error_count} "lockfree/spsc_queue_test" 1 wsd-output.txt))))
